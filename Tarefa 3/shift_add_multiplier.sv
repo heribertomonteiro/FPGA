@@ -3,7 +3,7 @@ module shift_add_multiplier (
     input  logic rst,
     input  logic [7:0] A,  // Multiplicador
     input  logic [7:0] B,  // Multiplicando
-    output logic [15:0] result,  // Agora 17 bits para conter carry extra
+    output logic [15:0] result, // Produto
     output logic done
 );
     typedef enum logic [2:0] {IDLE, CHECK, ADD, SHIFT, DONE} state_t;
@@ -18,7 +18,7 @@ module shift_add_multiplier (
     logic ula_carry;
 
     logic [1:0] ctrl_a, ctrl_q;
-    logic [8:0] parallel_a;  // 9 bits agora
+    logic [8:0] parallel_a; 
     logic [7:0] parallel_q;
     logic ser_a, ser_q;
 
@@ -31,9 +31,6 @@ module shift_add_multiplier (
     // Reg para guardar carry entre somas
     logic carry_reg;
 
-    // -------------------------------
-    // Instancia shift_register para 9 bits (A)
-    // -------------------------------
     shift_register #(9) regA (
         .clk(clk),
         .rst(rst),
@@ -82,7 +79,7 @@ module shift_add_multiplier (
     ula_8_bits ula (
         .a(a_reg_out[7:0]),
         .b(b_reg_out),
-        .s(4'b0001),        // soma
+        .s(4'b0001), // soma
         .m(1'b0),
         .c_in(1'b0),
         .f(ula_result),
@@ -122,8 +119,8 @@ module shift_add_multiplier (
 
         case(state)
             IDLE: begin
-                ctrl_a = 2'b11;       // Load paralelo A=0
-                ctrl_q = 2'b11;       // Load paralelo Q = multiplicador A
+                ctrl_a = 2'b11; 
+                ctrl_q = 2'b11;  
                 parallel_a = 9'b0;
                 parallel_q = A;
                 load_counter = 1;
@@ -138,7 +135,7 @@ module shift_add_multiplier (
             end
 
             ADD: begin
-                ctrl_a = 2'b11;       // Load resultado da ULA no A (8 bits + carry)
+                ctrl_a = 2'b11; // Load resultado da ULA no A (8 bits + carry)
                 parallel_a = {ula_carry, ula_result};  // concatena carry MSB
                 next_state = SHIFT;
             end
@@ -160,7 +157,6 @@ module shift_add_multiplier (
         endcase
     end
 
-    // Resultado final 17 bits: A (9 bits) + Q (8 bits)
-    assign result = {a_reg_out[7:0], q_reg_out};  // descarta carry extra
+    assign result = {a_reg_out[7:0], q_reg_out}; 
 
 endmodule
